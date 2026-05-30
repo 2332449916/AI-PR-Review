@@ -1,4 +1,4 @@
-"""Tests for the ignore rules engine."""
+"""Tests for the ignore rules  engine."""
 
 from __future__ import annotations
 
