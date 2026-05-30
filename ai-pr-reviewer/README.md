@@ -335,44 +335,4 @@ ai-pr-reviewer/
 └── pyproject.toml                # 项目元数据
 ```
 
----
 
-## ❓ 常见问题
-
-**问：哪个 LLM 提供商效果最好？**
-答：Claude Sonnet 4（Anthropic）在代码审查的速度和质量上综合表现最好。GPT-4o 紧随其后。本地模型（通过 Ollama）可用，但结果可靠性较低。
-
-**问：每次审查大概花多少钱？**
-答：用 Claude Sonnet 4 审查一个 500 行变更的 PR：约 8K 输入 tokens + 3K 输出 tokens ≈ $0.03（约 2 毛人民币）。
-
-**问：没有 GitHub Token 能用吗？**
-答：不能。工具需要 GitHub Token 来获取 PR 的 diff 数据。请使用 `repo` 权限的 classic PAT。
-
-**问：支持 GitHub Enterprise 吗？**
-答：支持。在配置中设置 `base_url` 为你的 GitHub Enterprise API 地址即可。
-
-**问：如何减少误报？**
-答：提高配置文件中的 `min_confidence`（如设为 0.8），或使用 `.ai-review-ignore` 关闭特定规则或路径。
-
-**问：能在 CI/CD 中使用吗？**
-答：可以。使用 `--format json` 输出机器可读的结果，或使用 `--auto-comment` 自动发布到 PR。
-
-**问：Windows 中文系统下 emoji 显示有问题？**
-答：设置环境变量 `PYTHONIOENCODING=utf-8`，或设置 `AI_REVIEWER_ASCII=1` 使用纯 ASCII 显示。
-
----
-
-## 📄 许可证
-
-MIT © 2026 AI-PR-Reviewer Team
-
-## 🤝 参与贡献
-
-欢迎贡献代码！请提交 Pull Request。
-
-1. Fork 本仓库
-2. 创建特性分支（`git checkout -b feature/amazing`）
-3. 运行测试确认通过（`pytest`）
-4. 提交变更（`git commit -m '添加新功能'`）
-5. 推送到分支（`git push origin feature/amazing`）
-6. 创建 Pull Request
