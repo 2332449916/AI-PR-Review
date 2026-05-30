@@ -1,4 +1,4 @@
-"""Tests for the report generator module."""
+"""."""
 
 from __future__ import annotations
 
