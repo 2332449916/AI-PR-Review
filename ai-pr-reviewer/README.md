@@ -1,6 +1,6 @@
 # 🤖 AI-PR-Reviewer
 
-> **AI-driven Pull Request Review assistant** — automatically analyses GitHub PRs using LLMs to identify bugs, security issues, performance bottlenecks, and improvement opportunities.
+> **AI 驱动的 PR 代码审查助手** — 自动分析 GitHub PR，利用大语言模型识别 Bug、安全漏洞、性能瓶颈和改进机会。
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,69 +8,63 @@
 
 ---
 
-## 📋 Table of Contents
+## 📋 目录
 
-- [Features](#-features)
-- [Quick Start](#-quick-start)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Configuration](#-configuration)
-- [Output Formats](#-output-formats)
-- [Architecture](#-architecture)
-- [Examples](#-examples)
-- [Development](#-development)
-- [FAQ](#-faq)
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| **🧠 AI-Powered Analysis** | Uses Claude, GPT-4o, or local LLMs to review code changes |
-| **🔍 Multi-Dimension Review** | Detects bugs, security issues (SQLi, XSS), performance problems, concurrency bugs, error handling gaps |
-| **📊 Structured Reports** | Markdown for PR comments + JSON for CI/CD integration |
-| **🎯 Confidence Scoring** | Every finding includes a 0.0–1.0 confidence score to reduce false positives |
-| **📋 Incremental Analysis** | Only analyses changed lines — no re-review of existing code |
-| **🔧 Smart Context** | AST-aware context building: fetches function/class definitions for changed code |
-| **🚫 Ignore Rules** | `.ai-review-ignore` file to exclude paths/rules (gitignore-style) |
-| **🔌 Multi-Provider** | Supports Anthropic, OpenAI, and any OpenAI-compatible local endpoint |
-| **💬 Auto-Comment** | Optionally posts review results directly on the PR |
-| **⚡ Streaming** | Real-time token streaming from LLM providers |
+- [功能特性](#-功能特性)
+- [快速开始](#-快速开始)
+- [安装](#-安装)
+- [使用](#-使用)
+- [配置](#-配置)
+- [输出格式](#-输出格式)
+- [架构](#-架构)
+- [示例](#-示例)
+- [开发](#-开发)
+- [常见问题](#-常见问题)
 
 ---
 
-## 🚀 Quick Start
+## ✨ 功能特性
+
+| 功能 | 说明 |
+|------|------|
+| **🧠 AI 智能分析** | 使用 Claude、GPT-4o 或本地模型审查代码变更 |
+| **🔍 多维审查** | 检测 Bug、安全漏洞（SQL注入、XSS）、性能问题、并发问题、错误处理缺失 |
+| **📊 结构化报告** | Markdown 格式用于 PR 评论 + JSON 格式用于 CI/CD 集成 |
+| **🎯 置信度评分** | 每个问题附带 0.0–1.0 的置信度分数，降低误报率 |
+| **📋 增量分析** | 只分析新增/修改的代码行，不重复审查未变更代码 |
+| **🔧 智能上下文** | 基于 AST 的上下文构建：自动拉取变更函数/类的定义 |
+| **🚫 忽略规则** | 通过 `.ai-review-ignore` 文件排除特定路径或规则（类 gitignore 语法） |
+| **🔌 多 Provider 支持** | 支持 Anthropic、OpenAI 及任何兼容 OpenAI 接口的本地模型 |
+| **💬 自动评论** | 可选择将审查结果自动发布到 PR 评论区 |
+| **⚡ 流式输出** | LLM 返回结果实时流式显示，无需等待完整响应 |
+
+---
+
+## 🚀 快速开始
 
 ```bash
-# Install
+# 安装
 pip install ai-pr-reviewer
 
-# Set your API keys
+# 设置 API 密钥
 export ANTHROPIC_API_KEY="sk-ant-..."
 export GITHUB_TOKEN="ghp_..."
 
-# Review a PR
+# 审查一个 PR
 ai-pr-reviewer review https://github.com/owner/repo/pull/42
 
-# Save to file
+# 保存到文件
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 --output review.md
 
-# Use GPT-4o instead
+# 使用 GPT-4o
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 --provider openai --model gpt-4o
 ```
 
 ---
 
-## 📦 Installation
+## 📦 安装
 
-### From PyPI (once published)
-
-```bash
-pip install ai-pr-reviewer
-```
-
-### From source
+### 从源码安装
 
 ```bash
 git clone https://github.com/pengxueqi616-commits/ai-pr-reviewer.git
@@ -78,52 +72,52 @@ cd ai-pr-reviewer
 pip install -e .
 ```
 
-### Dependencies
+### 依赖
 
 - **Python**: 3.11+
-- **Key packages**: `click`, `PyGithub`, `httpx`, `rich`, `pydantic`, `unidiff`, `anthropic`, `openai`, `tenacity`
+- **关键包**: `click`, `PyGithub`, `httpx`, `rich`, `pydantic`, `unidiff`, `anthropic`, `openai`, `tenacity`
 
 ---
 
-## 🔧 Usage
+## 🔧 使用
 
-### Basic PR Review
+### 基本用法
 
 ```bash
 ai-pr-reviewer review https://github.com/owner/repo/pull/42
 ```
 
-### Common Options
+### 常用选项
 
 ```bash
-# Save output to a file
+# 保存输出到文件
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 -o report.md
 
-# JSON output (machine-readable)
+# JSON 输出（便于 CI/CD 集成）
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 -f json
 
-# Use a different LLM provider
+# 使用不同的 LLM 提供商
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 \
     --provider openai \
     --model gpt-4o
 
-# Auto-post results as a PR comment
+# 自动发布审查结果为 PR 评论
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 --auto-comment
 
-# Use a custom config file
+# 使用自定义配置文件
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 -c .ai-review-config.yaml
 
-# Verbose logging for debugging
+# 开启详细日志（调试用）
 ai-pr-reviewer review https://github.com/owner/repo/pull/42 -v
 ```
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ 配置
 
-### Method 1: Config File (`.ai-review-config.yaml`)
+### 方式一：配置文件（`.ai-review-config.yaml`）
 
-Place at your repo root or specify with `--config`:
+放在仓库根目录，或用 `--config` 指定：
 
 ```yaml
 provider: anthropic
@@ -135,50 +129,50 @@ github:
   token_env: GITHUB_TOKEN
 
 analysis:
-  min_confidence: 0.7
-  max_context_tokens: 6000
-  severity_threshold: minor
-  max_files: 50
-  enable_ast_context: true
-  enable_cross_file_analysis: true
+  min_confidence: 0.7        # 最低置信度阈值
+  max_context_tokens: 6000   # 每个分析单元的最大 Token 数
+  severity_threshold: minor   # 最低报告级别
+  max_files: 50              # 最大分析文件数
+  enable_ast_context: true   # 启用 AST 上下文分析
+  enable_cross_file_analysis: true  # 启用跨文件分析
 
 output:
-  format: markdown
-  auto_comment: false
-  color: true
+  format: markdown           # 输出格式：markdown / json / both
+  auto_comment: false        # 自动发布到 PR
+  color: true                # 彩色输出
 ```
 
-### Method 2: Environment Variables
+### 方式二：环境变量
 
-| Variable | Purpose |
-|----------|---------|
-| `ANTHROPIC_API_KEY` | Anthropic API key |
-| `OPENAI_API_KEY` | OpenAI API key |
-| `GITHUB_TOKEN` or `GH_TOKEN` | GitHub Personal Access Token |
+| 变量 | 用途 |
+|------|------|
+| `ANTHROPIC_API_KEY` | Anthropic API 密钥 |
+| `OPENAI_API_KEY` | OpenAI API 密钥 |
+| `GITHUB_TOKEN` 或 `GH_TOKEN` | GitHub 个人访问令牌 |
 
-### Method 3: CLI Flags
+### 方式三：命令行参数
 
-All config options can be overridden at the command line:
+所有配置都可以通过命令行覆盖：
 
 ```bash
 ai-pr-reviewer review <pr-url> --provider openai --model gpt-4o --auto-comment
 ```
 
-### Ignore Rules (`.ai-review-ignore`)
+### 忽略规则（`.ai-review-ignore`）
 
-Create a `.ai-review-ignore` file at your repo root (gitignore-style):
+在仓库根目录创建 `.ai-review-ignore` 文件，gitignore 风格的语法：
 
 ```gitignore
-# Ignore generated files
+# 忽略生成的文件
 *.generated.py
 **/migrations/*
 **/vendor/*
 
-# Disable noisy rules
+# 关闭特定规则的报告
 rule:no-console-log
 rule:style-preference
 
-# Severity cap for test files
+# 针对测试文件提高严重级别阈值
 [threshold:major]
 **/test/**
 **/docs/**
@@ -186,32 +180,32 @@ rule:style-preference
 
 ---
 
-## 📄 Output Formats
+## 📄 输出格式
 
-### Markdown (default)
+### Markdown（默认）
 
-A formatted report suitable for GitHub PR comments:
+适合 GitHub PR 评论的精美格式：
 
 ```markdown
-# 🔍 AI PR Review: Fix login race condition
+# 🔍 AI PR Review: 修复登录竞态条件
 
-## 📋 Summary
-This PR fixes a race condition in the login handler...
+## 📋 总结
+本 PR 修复了登录处理中的竞态条件...
 
-## 🔎 Findings
+## 🔎 问题发现
 
-### 🔴 **Race condition in login handler** 🐛 (95% confidence) — `src/auth.py:42-48`
+### 🔴 **登录处理中的竞态条件** 🐛 (95% 置信度) — `src/auth.py:42-48`
 ...
 ```
 
-### JSON (for CI/CD)
+### JSON（适合 CI/CD）
 
-Machine-readable output for integration with other tools:
+机器可读的结构化输出：
 
 ```json
 {
   "version": "0.1.0",
-  "summary": "This PR introduces...",
+  "summary": "本 PR 引入了...",
   "stats": {
     "total_findings": 3,
     "by_severity": {"critical": 1, "major": 1, "minor": 1}
@@ -222,7 +216,7 @@ Machine-readable output for integration with other tools:
       "line_start": 42,
       "severity": "critical",
       "category": "concurrency",
-      "title": "Race condition in login handler",
+      "title": "登录处理中的竞态条件",
       "confidence": 0.95
     }
   ]
@@ -231,98 +225,98 @@ Machine-readable output for integration with other tools:
 
 ---
 
-## 🏗 Architecture
+## 🏗 架构
 
 ```
 ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
 │   CLI    │──▶│  GitHub  │──▶│  Diff    │──▶│ Context  │
-│  Entry   │   │ Fetcher  │   │ Parser   │   │ Builder  │
+│  入口    │   │ 获取器   │   │ 解析器   │   │ 构建器   │
 └──────────┘   └──────────┘   └──────────┘   └────┬─────┘
                                                   │
                                                   ▼
                                            ┌──────────┐
                                            │   LLM    │
-                                           │ Analyzer │
+                                           │ 分析引擎  │
                                            └────┬─────┘
                                                 │
                                                 ▼
                                          ┌──────────┐
                                          │  Report  │
-                                         │ Generator│
+                                         │ 生成器    │
                                          └──────────┘
 ```
 
-### Core Modules
+### 核心模块
 
-| Module | Responsibility |
-|--------|---------------|
-| `github_client/` | GitHub API: fetch PR data, diffs, file contents, post comments |
-| `diff/` | Parse unified diffs into structured file/hunk/line models |
-| `context/` | AST-based code analysis, context assembly, ignore rules |
-| `llm/` | Prompt templates, provider abstraction (Anthropic/OpenAI/Local), analysis engine |
-| `report/` | Markdown + JSON report generation |
+| 模块 | 职责 |
+|------|------|
+| `github_client/` | GitHub API：获取 PR 数据、Diff、文件内容，发布评论 |
+| `diff/` | 解析 Unified Diff 为结构化的文件/代码块/行模型 |
+| `context/` | 基于 AST 的代码分析、上下文组装、忽略规则引擎 |
+| `llm/` | Prompt 模板、Provider 抽象层（Anthropic/OpenAI/本地）、分析引擎 |
+| `report/` | Markdown + JSON 报告生成 |
 
-### Token Optimization Strategy
+### Token 优化策略
 
-1. **Chunking**: Diffs are split into token-budgeted units (~6K tokens each)
-2. **Prioritisation**: Changed lines first, then context, then imports
-3. **Incremental**: Only NEW and MODIFIED lines are fully analysed
-4. **Caching**: AST analysis results are cached to avoid re-parsing
-
----
-
-## 📊 Examples
-
-### Sample Report
-
-See [`examples/report_sample.md`](examples/report_sample.md) for a complete sample report.
-
-### Test Fixtures
-
-The [`tests/fixtures/`](tests/fixtures/) directory contains sample diffs:
-
-- `sample_diff_simple.txt` — A single-file Python change
-- `sample_diff_multifile.txt` — Changes across multiple files
-- `sample_diff_security.txt` — Contains SQL injection + weak hash issues
+1. **分块**：Diff 按 Token 预算分块（每块约 6K tokens）
+2. **优先级**：变更行 > 上下文 > 导入语句
+3. **增量分析**：只完整分析新增和修改的代码行
+4. **缓存**：AST 分析结果缓存避免重复解析
 
 ---
 
-## 🛠 Development
+## 📊 示例
+
+### 示例报告
+
+参见 [`examples/report_sample.md`](examples/report_sample.md) 查看完整的报告样本。
+
+### 测试夹具
+
+[`tests/fixtures/`](tests/fixtures/) 目录包含示例 diff：
+
+- `sample_diff_simple.txt` — 单文件 Python 变更
+- `sample_diff_multifile.txt` — 多文件跨文件变更
+- `sample_diff_security.txt` — 包含 SQL 注入和弱哈希安全问题
+
+---
+
+## 🛠 开发
 
 ```bash
-# Clone and install dev dependencies
+# 克隆并安装开发依赖
 git clone https://github.com/pengxueqi616-commits/ai-pr-reviewer.git
 cd ai-pr-reviewer
 pip install -e ".[dev]"
 
-# Run tests
+# 运行测试
 pytest
 
-# Run with coverage
+# 运行测试并查看覆盖率
 pytest --cov=src --cov-report=term-missing
 
-# Lint
+# 代码检查
 ruff check src/
 
-# Type check
+# 类型检查
 mypy src/
 ```
 
-### Project Structure
+### 项目结构
 
 ```
 ai-pr-reviewer/
 ├── src/
-│   ├── cli.py                    # Click CLI entry point
-│   ├── cli_utils.py              # Rich progress bars, retry, console helpers
-│   ├── config.py                 # YAML + env var configuration
-│   ├── github_client/            # GitHub API interaction
-│   ├── diff/                     # Diff parsing
-│   ├── context/                  # AST analysis + context building
-│   ├── llm/                      # LLM analysis engine + providers
-│   └── report/                   # Report generation
+│   ├── cli.py                    # Click CLI 入口
+│   ├── cli_utils.py              # Rich 进度条、重试、控制台助手
+│   ├── config.py                 # YAML + 环境变量配置
+│   ├── github_client/            # GitHub API 交互
+│   ├── diff/                     # Diff 解析
+│   ├── context/                  # AST 分析 + 上下文构建
+│   ├── llm/                      # LLM 分析引擎 + Provider
+│   └── report/                   # 报告生成
 ├── tests/
-│   ├── fixtures/                 # Sample diffs for testing
+│   ├── fixtures/                 # 测试用的示例 diff
 │   ├── test_diff_parser.py
 │   ├── test_ast_walker.py
 │   ├── test_config.py
@@ -335,46 +329,50 @@ ai-pr-reviewer/
 ├── examples/
 │   ├── report_sample.md
 │   └── report_sample.json
-├── DESIGN.md                     # Architecture design document
-├── .ai-review-config.yaml        # Default configuration
-└── pyproject.toml                # Project metadata
+├── DESIGN.md                     # 架构设计文档
+├── DESIGN_RATIONALE.md           # 设计权衡与反思
+├── .ai-review-config.yaml        # 默认配置
+└── pyproject.toml                # 项目元数据
 ```
 
 ---
 
-## ❓ FAQ
+## ❓ 常见问题
 
-**Q: Which LLM provider works best?**
-A: Claude Sonnet 4 (Anthropic) gives the best balance of speed and quality for code review. GPT-4o is a close second. Local models (via Ollama) work but may produce less reliable results.
+**问：哪个 LLM 提供商效果最好？**
+答：Claude Sonnet 4（Anthropic）在代码审查的速度和质量上综合表现最好。GPT-4o 紧随其后。本地模型（通过 Ollama）可用，但结果可靠性较低。
 
-**Q: How much does it cost per review?**
-A: For a 500-line PR with Claude Sonnet 4: ~8K input tokens + ~3K output tokens ≈ $0.03 per review.
+**问：每次审查大概花多少钱？**
+答：用 Claude Sonnet 4 审查一个 500 行变更的 PR：约 8K 输入 tokens + 3K 输出 tokens ≈ $0.03（约 2 毛人民币）。
 
-**Q: Can I use it without a GitHub token?**
-A: No — the tool needs a GitHub token to fetch PR diffs. Use a classic PAT with `repo` scope.
+**问：没有 GitHub Token 能用吗？**
+答：不能。工具需要 GitHub Token 来获取 PR 的 diff 数据。请使用 `repo` 权限的 classic PAT。
 
-**Q: Does it work with GitHub Enterprise?**
-A: Yes — set `base_url` in the config to your GitHub Enterprise API URL.
+**问：支持 GitHub Enterprise 吗？**
+答：支持。在配置中设置 `base_url` 为你的 GitHub Enterprise API 地址即可。
 
-**Q: How do I reduce false positives?**
-A: Increase `min_confidence` in config (e.g., 0.8), or use `.ai-review-ignore` to silence specific rules or paths.
+**问：如何减少误报？**
+答：提高配置文件中的 `min_confidence`（如设为 0.8），或使用 `.ai-review-ignore` 关闭特定规则或路径。
 
-**Q: Can I run it in CI/CD?**
-A: Yes — use `--format json` for machine-readable output, or `--auto-comment` to post results on the PR.
+**问：能在 CI/CD 中使用吗？**
+答：可以。使用 `--format json` 输出机器可读的结果，或使用 `--auto-comment` 自动发布到 PR。
+
+**问：Windows 中文系统下 emoji 显示有问题？**
+答：设置环境变量 `PYTHONIOENCODING=utf-8`，或设置 `AI_REVIEWER_ASCII=1` 使用纯 ASCII 显示。
 
 ---
 
-## 📄 License
+## 📄 许可证
 
 MIT © 2026 AI-PR-Reviewer Team
 
-## 🤝 Contributing
+## 🤝 参与贡献
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+欢迎贡献代码！请提交 Pull Request。
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Run the tests (`pytest`)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing`)
-6. Open a Pull Request
+1. Fork 本仓库
+2. 创建特性分支（`git checkout -b feature/amazing`）
+3. 运行测试确认通过（`pytest`）
+4. 提交变更（`git commit -m '添加新功能'`）
+5. 推送到分支（`git push origin feature/amazing`）
+6. 创建 Pull Request
