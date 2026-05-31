@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -78,7 +79,8 @@ def _create_provider(config: AppConfig):
     elif config.provider == "openai":
         return OpenAIProvider(provider_config)
     elif config.provider == "local":
-        return LocalProvider(provider_config)
+        base_url = os.environ.get("DASHSCOPE_BASE_URL") or os.environ.get("DEEPSEEK_BASE_URL", "http://localhost:11434/v1")
+        return LocalProvider(provider_config, base_url=base_url)
     else:
         raise ValueError(
             f"Unsupported provider: {config.provider}. "
