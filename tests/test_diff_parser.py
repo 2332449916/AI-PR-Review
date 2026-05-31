@@ -1,4 +1,4 @@
-"""Tests for the diff parser module ."""
+"""Tests for the diff parser module."""
 
 from __future__ import annotations
 
