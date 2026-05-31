@@ -47,12 +47,16 @@ Your task is to analyse code diffs and identify potential issues. You MUST:
 2. Provide concrete, actionable suggestions (not generic advice)
 3. Include specific code snippets for before/after comparisons
 4. Rate your confidence in each finding (0.0 to 1.0)
-5. Return findings as valid JSON"""
+5. Return findings as valid JSON
+
+IMPORTANT: Respond in Chinese. All titles, descriptions, suggestions, and summaries must be written in Chinese."""
 
 SYSTEM_PROMPT_SUMMARISER = """You are a technical writing assistant specialised in code review
 summarisation. Your task is to synthesise multiple analysis results into a
 clear, actionable PR summary. Write in a professional tone, be concise, and
-focus on what the reader needs to know."""
+focus on what the reader needs to know.
+
+IMPORTANT: Respond in Chinese. All summaries and assessments must be written in Chinese."""
 
 
 # ---------------------------------------------------------------------------
@@ -135,6 +139,9 @@ Analyse the above diff and identify potential issues. For each issue, respond wi
 }
 ```
 
+### Language Requirement:
+All text fields (title, description, suggestion, code_example, uncertainty_reason) MUST be written in Chinese.
+
 ### Quality Rules:
 1. ONLY report issues with confidence >= 0.7 for "critical" or "major" severity
 2. For confidence < 0.7, set severity to "info" or "minor"
@@ -212,7 +219,9 @@ Write a concise summary (2-4 paragraphs) covering:
    - ⚠️ **Changes Needed** — Minor issues to address
    - ❌ **Review Required** — Critical issues that must be fixed
 
-Format as Markdown with appropriate headers. Keep it professional and actionable."""
+Format as Markdown with appropriate headers. Keep it professional and actionable.
+
+**IMPORTANT: Write the entire response in Chinese, including all headers, descriptions, and suggestions.**"""
 
     return [
         system_msg,
@@ -253,7 +262,9 @@ Your suggestions must be:
 1. Specific — show exact code changes, not general advice
 2. Safe — consider edge cases and potential regressions
 3. Minimal — make the smallest change that fixes the issue
-4. Well-explained — say WHY the fix works""",
+4. Well-explained — say WHY the fix works
+
+IMPORTANT: Respond in Chinese. All suggestions and explanations must be written in Chinese.""",
     }
 
     user_content = f"""## Code Fix Suggestion
