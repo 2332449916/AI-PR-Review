@@ -13,20 +13,100 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import asdict
 from typing import Any
 
 from src.llm.analyzer import AnalysisReport, Finding
-from src.report.templates import CATEGORY_EMOJI, MARKDOWN_FOOTER, SEVERITY_EMOJI
+from src.report.templates import (
+    CATEGORY_EMOJI,
+    CATEGORY_LABELS,
+    MARKDOWN_FOOTER,
+    SEVERITY_EMOJI,
+    SEVERITY_LABELS,
+)
 
 logger = logging.getLogger(__name__)
 
 # 严重程度排序
 _SEVERITY_ORDER = {"critical": 0, "major": 1, "minor": 2, "info": 3}
 
+# 严重程度颜色标签
+_SEVERITY_BADGES = {
+    "critical": "🔴 严重",
+    "major": "🟠 主要",
+    "minor": "🟡 次要",
+    "info": "🔵 建议",
+}
+
 
 class ReportGenerator:
     """从分析结果生成结构化报告。"""
+
+    def _build_severity_bar(self, by_severity: dict[str, int], total: int) -> str:
+        """生成直观的严重程度分布条形图。"""
+        if total == 0:
+            return ""
+        bars = []
+        for sev in ["critical", "major", "minor", "info"]:
+            count = by_severity.get(sev, 0)
+            if count > 0:
+                pct = count / total * 100
+                bar_len = max(1, round(pct / 5))  # 每个单位 5%
+                bar = "█" * bar_len
+                label = SEVERITY_LABELS.get(sev, sev)
+                bars.append(f"  {SEVERITY_EMOJI.get(sev, '')} **{label}**: {bar} {count} ({pct:.0f}%)")
+        return "\n".join(bars)
+
+    def _build_finding_card(self, finding: Finding, index: int) -> list[str]:
+        """生成单个问题卡片。"""
+        parts = []
+
+        # 问题编号 + 标题
+        severity_badge = _SEVERITY_BADGES.get(finding.severity, finding.severity)
+        category_icon = CATEGORY_EMOJI.get(finding.category, "")
+        category_label = CATEGORY_LABELS.get(finding.category, finding.category)
+        confidence_pct = int(finding.confidence * 100)
+
+        parts.append(f"### {index}. {finding.title}")
+        parts.append("")
+
+        # 元信息行：严重程度 / 分类 / 置信度 / 位置
+        meta_parts = [f"**{severity_badge}**"]
+        if category_icon:
+            meta_parts.append(f"{category_icon} {category_label}")
+        meta_parts.append(f"🎯 {confidence_pct}% 置信度")
+        if finding.file_path:
+            loc = f"`{finding.file_path}"
+            if finding.line_start:
+                loc += f":{finding.line_start}"
+                if finding.line_end and finding.line_end != finding.line_start:
+                    loc += f"-{finding.line_end}"
+            loc += "`"
+            meta_parts.append(f"📄 {loc}")
+        parts.append("> " + " · ".join(meta_parts))
+        parts.append("")
+
+        # 描述
+        if finding.description:
+            parts.append(finding.description)
+            parts.append("")
+
+        # 建议
+        if finding.suggestion:
+            parts.append("---")
+            parts.append(f"**💡 修复建议**")
+            parts.append("")
+            parts.append(finding.suggestion)
+            parts.append("")
+
+        # 代码示例
+        if finding.code_example:
+            parts.append("")
+            parts.append("**📝 代码示例**")
+            parts.append("")
+            parts.append(f"```\n{finding.code_example}\n```")
+            parts.append("")
+
+        return parts
 
     def generate_markdown(self, report: AnalysisReport, pr_title: str = "") -> str:
         """生成格式化的 Markdown 报告。
@@ -40,96 +120,98 @@ class ReportGenerator:
         """
         parts: list[str] = []
 
-        # 头部
+        # ===== 头部 =====
         if pr_title:
-            parts.append(f"# 🔍 AI PR Review: {pr_title}")
+            parts.append(f"# 🔍 AI PR 审查报告: {pr_title}")
         else:
-            parts.append("# 🔍 AI PR Review")
+            parts.append("# 🔍 AI PR 审查报告")
         parts.append("")
 
-        # 摘要
+        # ===== 摘要 =====
         if report.summary:
-            parts.append("## 📋 Summary")
+            parts.append("## 📋 审查总结")
             parts.append("")
             parts.append(report.summary)
             parts.append("")
 
-        # 统计栏
-        if report.stats:
+        # ===== 问题统计 =====
+        if report.stats and report.findings:
             total = report.stats.get("total_findings", len(report.findings))
             by_severity = report.stats.get("by_severity", {})
-            severity_str = " · ".join(
-                f"{SEVERITY_EMOJI.get(s, '')} {s}: {c}"
-                for s, c in sorted(by_severity.items(), key=lambda x: _SEVERITY_ORDER.get(x[0], 99))
-            )
-            parts.append(f"**{total} findings** — {severity_str}")
+            by_category = report.stats.get("by_category", {})
+
+            parts.append("## 📊 问题统计")
             parts.append("")
 
-        # 发现
+            # 严重程度分布条形图
+            parts.append("### 严重程度分布")
+            parts.append("")
+            bar_chart = self._build_severity_bar(by_severity, total)
+            if bar_chart:
+                parts.append(bar_chart)
+                parts.append("")
+
+            # 分类分布
+            if by_category:
+                parts.append("### 问题分类")
+                parts.append("")
+                for cat, count in sorted(by_category.items(), key=lambda x: -x[1]):
+                    cat_icon = CATEGORY_EMOJI.get(cat, "")
+                    cat_label = CATEGORY_LABELS.get(cat, cat)
+                    pct = count / total * 100
+                    bar_len = max(1, round(pct / 5))
+                    bar = "█" * bar_len
+                    parts.append(f"  {cat_icon} **{cat_label}**: {bar} {count}")
+                parts.append("")
+
+            # 概要行
+            sev_parts = []
+            for s in ["critical", "major", "minor", "info"]:
+                c = by_severity.get(s, 0)
+                if c > 0:
+                    sev_parts.append(f"{SEVERITY_EMOJI.get(s, '')} {SEVERITY_LABELS.get(s, s)} {c}")
+            parts.append(f"> **共发现 {total} 个问题** —— {' · '.join(sev_parts)}")
+            parts.append("")
+
+        elif report.findings:
+            total = len(report.findings)
+            parts.append(f"> **共发现 {total} 个问题**")
+            parts.append("")
+        else:
+            parts.append("> ✨ **未发现问题，代码质量良好！**")
+            parts.append("")
+
+        # ===== 问题详情 =====
         if report.findings:
-            parts.append("## 🔎 Findings")
+            parts.append("---")
+            parts.append("")
+            parts.append("## 🔎 问题详情")
             parts.append("")
 
             for i, finding in enumerate(report.findings, 1):
-                severity_icon = SEVERITY_EMOJI.get(finding.severity, "")
-                category_icon = CATEGORY_EMOJI.get(finding.category, "")
-                confidence_pct = int(finding.confidence * 100)
-
-                # 发现头部
-                location = ""
-                if finding.file_path:
-                    loc = finding.file_path
-                    if finding.line_start:
-                        loc += f":{finding.line_start}"
-                        if finding.line_end and finding.line_end != finding.line_start:
-                            loc += f"-{finding.line_end}"
-                    location = f" — `{loc}`"
-
-                parts.append(
-                    f"### {severity_icon} **{finding.title}** "
-                    f"{category_icon} ({confidence_pct}% confidence){location}"
-                )
-                parts.append("")
-
-                # 描述
-                if finding.description:
-                    parts.append(finding.description)
-                    parts.append("")
-
-                # 建议
-                if finding.suggestion:
-                    parts.append("**💡 Suggestion:**")
-                    parts.append("")
-                    parts.append(finding.suggestion)
-                    parts.append("")
-
-                # 代码示例
-                if finding.code_example:
-                    parts.append("**📝 Example:**")
-                    parts.append("")
-                    parts.append(f"```\n{finding.code_example}\n```")
-                    parts.append("")
+                card = self._build_finding_card(finding, i)
+                parts.extend(card)
 
                 # 分隔符
                 if i < len(report.findings):
                     parts.append("---")
                     parts.append("")
 
-        # 元数据
+        # ===== 分析信息 =====
         if report.metadata:
             parts.append("---")
             parts.append("")
-            parts.append("### ⚙️ Analysis Details")
+            parts.append("### ⚙️ 分析信息")
             parts.append("")
             meta = report.metadata
-            parts.append(f"- **Model**: {meta.model}")
-            parts.append(f"- **Provider**: {meta.provider}")
-            parts.append(f"- **Duration**: {meta.analysis_duration_seconds:.1f}s")
-            parts.append(f"- **Units**: {meta.units_analysed} analysed, {meta.units_failed} failed")
-            parts.append(f"- **Tokens**: {meta.total_input_tokens:,} in / {meta.total_output_tokens:,} out")
+            parts.append(f"- **模型**: {meta.model}")
+            parts.append(f"- **提供商**: {meta.provider}")
+            parts.append(f"- **耗时**: {meta.analysis_duration_seconds:.1f}s")
+            parts.append(f"- **分析单元**: {meta.units_analysed} 个已分析, {meta.units_failed} 个失败")
+            parts.append(f"- **Token 用量**: {meta.total_input_tokens:,} in / {meta.total_output_tokens:,} out")
             parts.append("")
 
-        # 页脚
+        # ===== 页脚 =====
         parts.append(MARKDOWN_FOOTER)
 
         return "\n".join(parts)
