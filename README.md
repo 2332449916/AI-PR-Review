@@ -1,5 +1,7 @@
 # 🤖 AI-PR-Reviewer
 
+#demo 视频链接：  https://www.bilibili.com/video/BV1vFVS6YEQ1/?spm_id_from=333.1387.homepage.video_card.click&vd_source=896fc097ed1adade1c763684cc5d7870
+
 > **AI 驱动的 PR 代码审查助手** — 自动分析 GitHub PR，利用大语言模型识别 Bug、安全漏洞、性能瓶颈和改进机会。
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
