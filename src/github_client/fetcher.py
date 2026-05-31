@@ -293,7 +293,11 @@ class GitHubFetcher:
             content = gh_repo.get_contents(path, ref=ref)
             if content and content.content:
                 import base64
-                return base64.b64decode(content.content).decode("utf-8")
+                try:
+                    return base64.b64decode(content.content).decode("utf-8")
+                except UnicodeDecodeError:
+                    logger.debug("Skipping binary file %s at ref %s", path, ref)
+                    return None
             return None
         except GithubException as exc:
             if exc.status == 404:
