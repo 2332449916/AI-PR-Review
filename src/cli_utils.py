@@ -4,7 +4,7 @@ CLI 工具函数 — 进度条、重试处理器和控制台辅助函数。
 为所有 CLI 操作提供一致的用户体验：
 - 多步骤分析的动画进度条
 - 按严重程度着色输出
-- API 调用的指数退避重试.
+- API 调用的指数退避重试
 - 与 Rich 集成的结构化日志
 """
 
@@ -80,10 +80,10 @@ SEVERITY_STYLES: dict[str, str] = {
 }
 
 SEVERITY_LABELS: dict[str, str] = {
-    "critical": _emoji("\U0001f534", "[X]") + " CRITICAL",
-    "major": _emoji("\U0001f7e0", "[!]") + " MAJOR",
-    "minor": _emoji("\U0001f7e1", "[-]") + " MINOR",
-    "info": _emoji("\U0001f535", "[i]") + " INFO",
+    "critical": _emoji("\U0001f534", "[X]") + " 严重",
+    "major": _emoji("\U0001f7e0", "[!]") + " 主要",
+    "minor": _emoji("\U0001f7e1", "[-]") + " 次要",
+    "info": _emoji("\U0001f535", "[i]") + " 建议",
 }
 
 
@@ -299,13 +299,13 @@ def print_findings_summary(
     """
     if total == 0:
         sparkle = _emoji("✨", "*")
-        console.print(f"\n[bold green]{sparkle} No issues found — PR looks clean![/]")
+        console.print(f"\n[bold green]{sparkle} 未发现问题 — 代码质量良好![/]")
         return
 
     # 严重级别分解
-    table = Table(title="Findings Summary", title_style="bold", box=None)
-    table.add_column("Severity", style="bold")
-    table.add_column("Count", justify="right")
+    table = Table(title="问题统计", title_style="bold", box=None)
+    table.add_column("严重程度", style="bold")
+    table.add_column("数量", justify="right")
 
     severity_order = ["critical", "major", "minor", "info"]
     for sev in severity_order:
@@ -319,12 +319,14 @@ def print_findings_summary(
 
     # 类别分解
     if by_category:
-        cat_table = Table(title="Categories", title_style="bold", box=None)
-        cat_table.add_column("Category", style="bold")
-        cat_table.add_column("Count", justify="right")
+        cat_table = Table(title="问题分类", title_style="bold", box=None)
+        cat_table.add_column("分类", style="bold")
+        cat_table.add_column("数量", justify="right")
 
         for cat, count in sorted(by_category.items(), key=lambda x: -x[1]):
-            cat_table.add_row(cat.replace("_", " ").title(), str(count))
+            from src.report.templates import CATEGORY_LABELS
+            cat_label = CATEGORY_LABELS.get(cat, cat.replace("_", " ").title())
+            cat_table.add_row(cat_label, str(count))
 
         console.print(cat_table)
 
@@ -334,9 +336,8 @@ def print_severity_distribution(findings_count: int, duration: float) -> None:
     sparkle = _emoji("✨", "*")
     chart = _emoji("\U0001f4ca", "[#]")
     if findings_count == 0:
-        console.print(f"\n{sparkle} [bold green]No issues found[/] in {duration:.1f}s")
+        console.print(f"\n{sparkle} [bold green]未发现问题[/] 耗时 {duration:.1f}s")
     else:
         console.print(
-            f"\n{chart} [bold]{findings_count}[/] {'issue' if findings_count == 1 else 'issues'} "
-            f"found in {duration:.1f}s"
+            f"\n{chart} [bold]{findings_count}[/] 个问题 耗时 {duration:.1f}s"
         )
